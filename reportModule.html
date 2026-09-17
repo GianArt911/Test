@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Zack's Foodbar - Report Module</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .filter-panel { background-color: #f8f9fa; padding: 15px; border: 1px solid #ddd; border-radius: 5px; width: 550px; margin-bottom: 20px; }
+        .filter-group { display: inline-block; margin-right: 15px; margin-bottom: 10px; }
+        .filter-group label { display: block; font-weight: bold; margin-bottom: 3px; font-size: 13px; }
+        .filter-group input, .filter-group select { padding: 6px; font-size: 13px; }
+        button { padding: 8px 16px; font-size: 14px; background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
+        button:hover { background-color: #0056b3; }
+        table { border-collapse: collapse; width: 80%; margin-top: 15px; }
+        th, td { border: 1px solid #000000; padding: 10px; text-align: left; }
+        th { background-color: #343a40; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+    <h2>Module 3: Sales Performance Report (QuickSort Analytics)</h2>
+
+    <!-- Filter & Sort Inputs -->
+    <div class="filter-panel">
+        <div class="filter-group">
+            <label for="startDate">Start Date:</label>
+            <input type="date" id="startDate" value="2026-09-01">
+        </div>
+
+        <div class="filter-group">
+            <label for="endDate">End Date:</label>
+            <input type="date" id="endDate" value="2026-09-03">
+        </div>
+
+        <div class="filter-group">
+            <label for="sortBy">Sort By Metric:</label>
+            <select id="sortBy">
+                <option value="grossRevenue">Gross Revenue (₱)</option>
+                <option value="unitsSold">Units Sold</option>
+            </select>
+        </div>
+
+        <div style="margin-top: 10px;">
+            <button type="button" id="generateReportBtn">Run QuickSort Report</button>
+        </div>
+    </div>
+
+    <div id="reportTableContainer"></div>
+
+    <script src="reportModule.js"></script>
+    <script>
+        function renderReport() {
+            var start = document.getElementById("startDate").value;
+            var end = document.getElementById("endDate").value;
+            var metric = document.getElementById("sortBy").value;
+            var container = document.getElementById("reportTableContainer");
+
+            if (!start || !end) {
+                container.innerHTML = "<p style='color:red;'>Please select both Start and End dates.</p>";
+                return;
+            }
+
+            // 1. Manual date filtering
+            var reportData = [];
+            var reportCount = 0;
+            for (var i = 0; i < historicalSales.length; i++) {
+                if (historicalSales[i].date >= start && historicalSales[i].date <= end) {
+                    reportData[reportCount] = historicalSales[i];
+                    reportCount++;
+                }
+            }
+
+            if (reportData.length === 0) {
+                container.innerHTML = "<p>No sales transactions found for the selected date range.</p>";
+                return;
+            }
+
+            // 2. Execute manual QuickSort descending
+            var sortedData = quickSortDescending(reportData, metric);
+
+            // 3. Render HTML output table
+            var metricLabel = (metric === "grossRevenue") ? "Gross Revenue" : "Units Sold";
+            var html = "<h3>Ranked Sales Report (" + start + " to " + end + ")</h3>" +
+                "<p>Sorted Descending by: <strong>" + metricLabel + "</strong></p>" +
+                "<table>" +
+                "<tr>" +
+                    "<th>Rank</th>" +
+                    "<th>Item Name</th>" +
+                    "<th>Units Sold</th>" +
+                    "<th>Gross Revenue</th>" +
+                    "<th>Transaction Date</th>" +
+                "</tr>";
+
+            for (var j = 0; j < sortedData.length; j++) {
+                var item = sortedData[j];
+                html += "<tr>" +
+                    "<td>" + (j + 1) + "</td>" +
+                    "<td>" + item.name + "</td>" +
+                    "<td>" + item.unitsSold + " units</td>" +
+                    "<td>₱" + item.grossRevenue.toFixed(2) + "</td>" +
+                    "<td>" + item.date + "</td>" +
+                "</tr>";
+            }
+
+            html += "</table>";
+            container.innerHTML = html;
+        }
+
+        document.getElementById("generateReportBtn").addEventListener("click", renderReport);
+
+        window.onload = function() {
+            renderReport();
+        };
+    </script>
+
+</body>
+</html>

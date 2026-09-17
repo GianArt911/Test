@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Zack's Foodbar - Stock Module</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .form-container { background-color: #f4f4f4; padding: 15px; border-radius: 5px; width: 450px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: inline-block; width: 140px; font-weight: bold; }
+        .form-group input { padding: 5px; width: 250px; }
+        .btn-group { margin-top: 15px; }
+        button { padding: 8px 15px; font-size: 14px; cursor: pointer; margin-right: 10px; }
+        .btn-enqueue { background-color: #28a745; color: white; border: none; }
+        .btn-dequeue { background-color: #dc3545; color: white; border: none; }
+        table { border-collapse: collapse; width: 90%; margin-top: 15px; }
+        th, td { border: 1px solid #000000; padding: 10px; text-align: left; }
+        th { background-color: #e9ecef; }
+        .tag-first { background-color: #d4edda; color: #155724; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+        .tag-queue { background-color: #e2e3e5; color: #383d41; padding: 3px 8px; border-radius: 4px; }
+        .status-msg { margin-top: 10px; font-style: italic; color: #333; }
+    </style>
+</head>
+<body>
+
+    <h2>Module 2: Stock / Supply Module (Pointer Queue FIFO)</h2>
+
+    <!-- Input Form for Delivery Entry -->
+    <div class="form-container">
+        <h3>Receive Delivery (Enqueue)</h3>
+        <div class="form-group">
+            <label for="batchId">Batch ID:</label>
+            <input type="text" id="batchId" placeholder="e.g. BATCH-003">
+        </div>
+        <div class="form-group">
+            <label for="ingredientCode">Ingredient Code:</label>
+            <input type="text" id="ingredientCode" placeholder="e.g. ING-MILK">
+        </div>
+        <div class="form-group">
+            <label for="quantity">Quantity (units):</label>
+            <input type="number" id="quantity" placeholder="e.g. 15">
+        </div>
+        <div class="form-group">
+            <label for="expDate">Expiration Date:</label>
+            <input type="date" id="expDate">
+        </div>
+        <div class="form-group">
+            <label for="supplier">Supplier Name:</label>
+            <input type="text" id="supplier" placeholder="e.g. Dairy Co.">
+        </div>
+
+        <div class="btn-group">
+            <button type="button" class="btn-enqueue" id="enqueueBtn">Enqueue New Stock</button>
+            <button type="button" class="btn-dequeue" id="dequeueBtn">Dequeue Oldest Stock</button>
+        </div>
+    </div>
+
+    <div class="status-msg" id="statusLog">Status log will appear here.</div>
+
+    <h3>Active Inventory Queue</h3>
+    <div id="stockTableContainer"></div>
+
+    <script src="stockModule.js"></script>
+    <script>
+        function renderQueueToPage() {
+            var container = document.getElementById("stockTableContainer");
+
+            if (typeof milkQueue !== "undefined" && !milkQueue.isEmpty()) {
+                var html = "<table>" +
+                    "<tr>" +
+                        "<th>Queue Priority</th>" +
+                        "<th>Batch ID</th>" +
+                        "<th>Ingredient Code</th>" +
+                        "<th>Quantity</th>" +
+                        "<th>Expiration Date</th>" +
+                        "<th>Supplier Name</th>" +
+                    "</tr>";
+
+                var displayPosition = 1;
+                for (var i = milkQueue.front; i <= milkQueue.rear; i++) {
+                    var batch = milkQueue.items[i];
+                    var priorityTag = (i === milkQueue.front) 
+                        ? "<span class='tag-first'>FRONT (Use First)</span>" 
+                        : "<span class='tag-queue'>Position " + displayPosition + "</span>";
+
+                    html += "<tr>" +
+                        "<td>" + priorityTag + "</td>" +
+                        "<td>" + batch.batchId + "</td>" +
+                        "<td>" + batch.ingredientCode + "</td>" +
+                        "<td>" + batch.quantity + " units</td>" +
+                        "<td>" + batch.expirationDate + "</td>" +
+                        "<td>" + batch.supplierName + "</td>" +
+                    "</tr>";
+
+                    displayPosition++;
+                }
+
+                html += "</table>";
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = "<p>No active stock batches remaining in the queue.</p>";
+            }
+        }
+
+        // Handle Enqueue Action
+        document.getElementById("enqueueBtn").addEventListener("click", function() {
+            var id = document.getElementById("batchId").value;
+            var code = document.getElementById("ingredientCode").value;
+            var qty = parseInt(document.getElementById("quantity").value);
+            var exp = document.getElementById("expDate").value;
+            var supp = document.getElementById("supplier").value;
+
+            if (!id || !code || isNaN(qty) || !exp || !supp) {
+                document.getElementById("statusLog").innerHTML = "<span style='color:red;'>Please fill in all fields before enqueuing.</span>";
+                return;
+            }
+
+            var newBatch = new SupplyBatch(id, code, qty, exp, supp);
+            var success = milkQueue.enqueue(newBatch);
+
+            if (success) {
+                document.getElementById("statusLog").innerHTML = "Successfully added <strong>" + id + "</strong> to the queue rear.";
+                renderQueueToPage();
+                
+                // Clear input fields
+                document.getElementById("batchId").value = "";
+                document.getElementById("ingredientCode").value = "";
+                document.getElementById("quantity").value = "";
+                document.getElementById("expDate").value = "";
+                document.getElementById("supplier").value = "";
+            } else {
+                document.getElementById("statusLog").innerHTML = "<span style='color:red;'>Queue Overflow! Queue is full.</span>";
+            }
+        });
+
+        // Handle Dequeue Action
+        document.getElementById("dequeueBtn").addEventListener("click", function() {
+            var usedBatch = milkQueue.dequeue();
+            if (usedBatch) {
+                document.getElementById("statusLog").innerHTML = "Dequeued oldest stock: <strong>" + usedBatch.batchId + "</strong> (" + usedBatch.ingredientCode + ")";
+                renderQueueToPage();
+            } else {
+                document.getElementById("statusLog").innerHTML = "<span style='color:red;'>Queue Underflow! No stock available to dequeue.</span>";
+            }
+        });
+
+        window.onload = function() {
+            renderQueueToPage();
+        };
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Zack's Foodbar - Search Module</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .search-container { margin-bottom: 20px; }
+        input[type="text"] { padding: 8px; width: 250px; font-size: 14px; }
+        button { padding: 8px 15px; font-size: 14px; cursor: pointer; }
+        .result-box { margin-top: 15px; padding: 10px; border: 1px solid #ccc; background-color: #f9f9f9; width: 320px; }
+        hr { border: 0; border-top: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+    <!-- <h2>Module 1: Search Module (Linear & Binary Search)</h2> -->
+    <p>Enter an Item ID (numeric) or Item Name (text) to locate items:</p>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="e.g. 202 or Tea">
+        <button type="button" id="searchButton">Search Item</button>
+    </div>
+
+    <div class="result-box" id="resultOutput">
+        Search results will appear here.
+    </div>
+
+    <script src="searchModule.js"></script>
+    <script>
+        document.getElementById("searchButton").addEventListener("click", function() {
+            var query = document.getElementById("searchInput").value;
+            var outputContainer = document.getElementById("resultOutput");
+
+            if (query.trim() === "") {
+                outputContainer.innerHTML = "Please enter a valid search query.";
+                return;
+            }
+
+            if (typeof searchModule === "function") {
+                var results = searchModule(query);
+                
+                if (results && results.length > 0) {
+                    var htmlOutput = "<strong>Item(s) Found (" + results.length + "):</strong><br><br>";
+                    
+                    for (var i = 0; i < results.length; i++) {
+                        htmlOutput += "<strong>ID:</strong> " + results[i].id + "<br>" +
+                            "<strong>Name:</strong> " + results[i].name + "<br>" +
+                            "<strong>Price:</strong> ₱" + results[i].price.toFixed(2) + "<br><hr>";
+                    }
+                    
+                    outputContainer.innerHTML = htmlOutput;
+                } else {
+                    outputContainer.innerHTML = "No matching item found.";
+                }
+            } else {
+                outputContainer.innerHTML = "Open browser console (F12) to view execution logs.";
+            }
+        });
+    </script>
+
+</body>
+</html>
